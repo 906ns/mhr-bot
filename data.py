@@ -2,142 +2,178 @@
 """
 モンハンサンブレイク 傀異化素材データ
 
-データ出典: AppMedia 傀異化素材一覧
-https://appmedia.jp/mhrise/75715234
+データ出典:
+  入手元モンスター・素材名 … AppMedia 傀異化素材一覧 https://appmedia.jp/mhrise/75715234
+  モンスターURL            … モンハンライズ攻略レシピ https://mhrise.com/data/4211.html
 
 構造:
   MONSTERS  … モンスター名 → URL（URLはここ1箇所で管理し重複させない）
-  MATERIALS … 素材の種類 → 系統(通常系/凶系) → そのモンスター名リスト
+  MATERIALS … 素材カテゴリ名 → {"alias": [漢字の別名(任意)], "yomi": [ひらがな読み], "tiers": [レア度3段階の素材名], "monsters": [入手元モンスター名]}
 
-補足:
-  - 素材のレア度違い(例: 爪/尖爪/剛爪)は入手元モンスターが同じなので区別しない。
-  - 「通常系」と「凶系」は入手元モンスターが異なるので系統として分けている。
-  - 通常系が存在しない素材(例: 翼膜)は「凶系」のみを持つ。
+検索の考え方:
+  ユーザーが入力した文字を「素材カテゴリ名の一部に含む」キーをすべて拾う(部分一致)。
+  漢字でもひらがな(yomi)でも照合する。例:「骨」「ほね」どちらでも 骨/凶骨/竜骨/龍骨 がヒット。
+     1つだけヒットなら選択を出さず即結果。
 """
 
 # ───────────────────────────────────────────
 # モンスター名 → URL
 # ───────────────────────────────────────────
 MONSTERS = {
-    # 骨系
-    "アオアシラ": "https://appmedia.jp/mhrise/6123526",
-    "ラングロトラ": "https://appmedia.jp/mhrise/6123538",
-    "ウルクスス": "https://appmedia.jp/mhrise/6123550",
-    # 皮系
-    "オサイズチ": "https://appmedia.jp/mhrise/6123520",
-    "ドスバギィ": "https://appmedia.jp/mhrise/6123556",
-    "クルルヤック": "https://appmedia.jp/mhrise/6130000",
-    "ドスフロギィ": "https://appmedia.jp/mhrise/6123574",
-    # 竜骨系
-    "ロアルドロス": "https://appmedia.jp/mhrise/6123571",
-    "ボルボロス": "https://appmedia.jp/mhrise/6129994",
-    "アケノシルム": "https://appmedia.jp/mhrise/6123577",
-    "バサルモス": "https://appmedia.jp/mhrise/6123535",
-    # 血系
-    "ダイミョウザザミ": "https://appmedia.jp/mhrise/75696292",
-    "フルフル": "https://appmedia.jp/mhrise/6123553",
-    "ヨツミワドウ": "https://appmedia.jp/mhrise/6123580",
-    "ビシュテンゴ": "https://appmedia.jp/mhrise/6123568",
-    # 鱗系
-    "リオレイア": "https://appmedia.jp/mhrise/6123517",
-    "トビカガチ": "https://appmedia.jp/mhrise/6130006",
-    "プケプケ": "https://appmedia.jp/mhrise/6130009",
-    "アンジャナフ": "https://appmedia.jp/mhrise/6129997",
-    # 甲殻系
-    "ビシュテンゴ亜種": "https://appmedia.jp/mhrise/75696493",
-    "イソネミクニ": "https://appmedia.jp/mhrise/6123565",
-    "ショウグンギザミ": "https://appmedia.jp/mhrise/75696748",
-    "ジュラトドス": "https://appmedia.jp/mhrise/6130003",
-    # 牙系
-    "ナルガクルガ": "https://appmedia.jp/mhrise/6123586",
-    "マガイマガド": "https://appmedia.jp/mhrise/6123529",
-    "ガランゴルム": "https://appmedia.jp/mhrise/75696697",
-    "ベリオロス": "https://appmedia.jp/mhrise/6123559",
-    # 爪系
-    "ゴシャハギ": "https://appmedia.jp/mhrise/6123547",
-    "オロミドロ": "https://appmedia.jp/mhrise/6123541",
-    "ヤツカダキ": "https://appmedia.jp/mhrise/6123532",
-    "イソネミクニ亜種": "https://appmedia.jp/mhrise/75697477",
-    # 凶骨系
-    "ルナガロン": "https://appmedia.jp/mhrise/75737200",
-    "オロミドロ亜種": "https://appmedia.jp/mhrise/75762640",
-    "ティガレックス": "https://appmedia.jp/mhrise/6123562",
-    # 凶鱗系
-    "リオレウス": "https://appmedia.jp/mhrise/6129991",
-    "ライゼクス": "https://appmedia.jp/mhrise/75617596",
-    "タマミツネ": "https://appmedia.jp/mhrise/6123523",
-    # 凶角系
-    "ディアブロス": "https://appmedia.jp/mhrise/6123544",
-    "ジンオウガ": "https://appmedia.jp/mhrise/6123583",
-    "セルレギオス": "https://appmedia.jp/mhrise/75756916",
-    # 凶殻系
-    "ゴア・マガラ": "https://appmedia.jp/mhrise/75762775",
-    "エスピナス": "https://appmedia.jp/mhrise/75737335",
-    "バゼルギウス": "https://appmedia.jp/mhrise/6337576",
-    # 凶爪系
-    "ラージャン": "https://appmedia.jp/mhrise/6129847",
-    "ヤツカダキ亜種": "https://appmedia.jp/mhrise/75777412",
-    # 凶翼膜系
-    "リオレウス希少種": "https://appmedia.jp/mhrise/75880516",
-    "リオレイア希少種": "https://appmedia.jp/mhrise/75880906",
-    # 凶血系
-    "エスピナス亜種": "https://appmedia.jp/mhrise/76054655",
-    "紅蓮滾るバゼルギウス": "https://appmedia.jp/mhrise/75876010",
-    # 凶牙系
-    "激昂したラージャン": "https://appmedia.jp/mhrise/75777466",
-    "怨嗟響めくマガイマガド": "https://appmedia.jp/mhrise/75777499",
-    # 破傀の龍骨・龍血系
-    "傀異克服オオナズチ": "https://appmedia.jp/mhrise/76059647",
-    "傀異克服クシャルダオラ": "https://appmedia.jp/mhrise/76234993",
-    "傀異克服テオ・テスカトル": "https://appmedia.jp/mhrise/76235005",
-    "傀異克服バルファルク": "https://appmedia.jp/mhrise/76449400",
-    "傀異克服シャガルマガラ": "https://appmedia.jp/mhrise/76732172",
+    "アオアシラ": "https://mhrise.com/data/4446.html",
+    "ラングロトラ": "https://mhrise.com/data/4490.html",
+    "ウルクスス": "https://mhrise.com/data/4456.html",
+    "オサイズチ": "https://mhrise.com/data/4443.html",
+    "ドスバギィ": "https://mhrise.com/data/4458.html",
+    "クルルヤック": "https://mhrise.com/data/4462.html",
+    "ドスフロギィ": "https://mhrise.com/data/4451.html",
+    "ロアルドロス": "https://mhrise.com/data/4450.html",
+    "ボルボロス": "https://mhrise.com/data/4501.html",
+    "アケノシルム": "https://mhrise.com/data/4442.html",
+    "バサルモス": "https://mhrise.com/data/4466.html",
+    "ダイミョウザザミ": "https://mhrise.com/data/4544.html",
+    "フルフル": "https://mhrise.com/data/4453.html",
+    "ヨツミワドウ": "https://mhrise.com/data/4444.html",
+    "ビシュテンゴ": "https://mhrise.com/data/4449.html",
+    "リオレイア": "https://mhrise.com/data/4460.html",
+    "トビカガチ": "https://mhrise.com/data/4447.html",
+    "プケプケ": "https://mhrise.com/data/4464.html",
+    "アンジャナフ": "https://mhrise.com/data/4461.html",
+    "ビシュテンゴ亜種": "https://mhrise.com/data/4533.html",
+    "イソネミクニ": "https://mhrise.com/data/4448.html",
+    "ショウグンギザミ": "https://mhrise.com/data/4534.html",
+    "ジュラトドス": "https://mhrise.com/data/4463.html",
+    "ナルガクルガ": "https://mhrise.com/data/4508.html",
+    "マガイマガド": "https://mhrise.com/data/4441.html",
+    "ガランゴルム": "https://mhrise.com/data/4530.html",
+    "ベリオロス": "https://mhrise.com/data/4457.html",
+    "ゴシャハギ": "https://mhrise.com/data/4455.html",
+    "オロミドロ": "https://mhrise.com/data/4491.html",
+    "ヤツカダキ": "https://mhrise.com/data/4465.html",
+    "イソネミクニ亜種": "https://mhrise.com/data/4538.html",
+    "ルナガロン": "https://mhrise.com/data/4531.html",
+    "オロミドロ亜種": "https://mhrise.com/data/4539.html",
+    "ティガレックス": "https://mhrise.com/data/4454.html",
+    "リオレウス": "https://mhrise.com/data/4459.html",
+    "ライゼクス": "https://mhrise.com/data/4532.html",
+    "タマミツネ": "https://mhrise.com/data/4452.html",
+    "ディアブロス": "https://mhrise.com/data/4492.html",
+    "ジンオウガ": "https://mhrise.com/data/4483.html",
+    "セルレギオス": "https://mhrise.com/data/4537.html",
+    "ゴア・マガラ": "https://mhrise.com/data/4542.html",
+    "エスピナス": "https://mhrise.com/data/4543.html",
+    "バゼルギウス": "https://mhrise.com/data/4523.html",
+    "ラージャン": "https://mhrise.com/data/4493.html",
+    "ヤツカダキ亜種": "https://mhrise.com/data/4545.html",
+    "リオレウス希少種": "https://mhrise.com/data/4588.html",
+    "リオレイア希少種": "https://mhrise.com/data/4587.html",
+    "エスピナス亜種": "https://mhrise.com/data/4590.html",
+    "紅蓮滾るバゼルギウス": "https://mhrise.com/data/4575.html",
+    "激昂したラージャン": "https://mhrise.com/data/4574.html",
+    "怨嗟響めくマガイマガド": "https://mhrise.com/data/4573.html",
+    "傀異克服オオナズチ": "https://mhrise.com/data/4592.html",
+    "傀異克服クシャルダオラ": "https://mhrise.com/data/4595.html",
+    "傀異克服テオ・テスカトル": "https://mhrise.com/data/4594.html",
+    "傀異克服バルファルク": "https://mhrise.com/data/4598.html",
+    "傀異克服シャガルマガラ": "https://mhrise.com/data/4600.html",
 }
 
 # ───────────────────────────────────────────
-# 素材の種類 → 系統 → モンスター名リスト
+# 素材カテゴリ名 → レア度3段階の素材名 + 入手元モンスター
 # ───────────────────────────────────────────
 MATERIALS = {
+    # 通常系
     "骨": {
-        "通常系": ["アオアシラ", "ラングロトラ", "ウルクスス"],
-        "凶系": ["ルナガロン", "オロミドロ亜種", "ティガレックス"],
+        "yomi": ["ほね"],
+        "tiers": ["傀異化した骨", "傀異化した堅骨", "傀異化した重骨"],
+        "monsters": ["アオアシラ", "ラングロトラ", "ウルクスス"],
     },
     "皮": {
-        "通常系": ["オサイズチ", "ドスバギィ", "クルルヤック", "ドスフロギィ"],
+        "yomi": ["かわ"],
+        "tiers": ["傀異化した皮", "傀異化した上皮", "傀異化した厚皮"],
+        "monsters": ["オサイズチ", "ドスバギィ", "クルルヤック", "ドスフロギィ"],
     },
     "竜骨": {
-        "通常系": ["ロアルドロス", "ボルボロス", "アケノシルム", "バサルモス"],
+        "yomi": ["りゅうこつ"],
+        "tiers": ["傀異化した竜骨", "傀異化した堅竜骨", "傀異化した重竜骨"],
+        "monsters": ["ロアルドロス", "ボルボロス", "アケノシルム", "バサルモス"],
     },
     "血": {
-        "通常系": ["ダイミョウザザミ", "フルフル", "ヨツミワドウ", "ビシュテンゴ"],
-        "凶系": ["エスピナス亜種", "紅蓮滾るバゼルギウス"],
+        "yomi": ["ち"],
+        "tiers": ["傀異化した血", "傀異化した浄血", "傀異化した浄濃血"],
+        "monsters": ["ダイミョウザザミ", "フルフル", "ヨツミワドウ", "ビシュテンゴ"],
     },
     "鱗": {
-        "通常系": ["リオレイア", "トビカガチ", "プケプケ", "アンジャナフ"],
-        "凶系": ["リオレウス", "ライゼクス", "タマミツネ"],
+        "yomi": ["うろこ"],
+        "tiers": ["傀異化した鱗", "傀異化した上鱗", "傀異化した厚鱗"],
+        "monsters": ["リオレイア", "トビカガチ", "プケプケ", "アンジャナフ"],
     },
-    "甲殻": {
-        "通常系": ["ビシュテンゴ亜種", "イソネミクニ", "ショウグンギザミ", "ジュラトドス"],
-        "凶系": ["ゴア・マガラ", "エスピナス", "バゼルギウス"],
+    "殻": {
+        "alias": ["甲殻"],
+        "yomi": ["から", "こうかく"],
+        "tiers": ["傀異化した甲殻", "傀異化した堅殻", "傀異化した重殻"],
+        "monsters": ["ビシュテンゴ亜種", "イソネミクニ", "ショウグンギザミ", "ジュラトドス"],
     },
     "牙": {
-        "通常系": ["ナルガクルガ", "マガイマガド", "ガランゴルム", "ベリオロス"],
-        "凶系": ["激昂したラージャン", "怨嗟響めくマガイマガド"],
+        "yomi": ["きば"],
+        "tiers": ["傀異化した牙", "傀異化した鋭牙", "傀異化した重牙"],
+        "monsters": ["ナルガクルガ", "マガイマガド", "ガランゴルム", "ベリオロス"],
     },
     "爪": {
-        "通常系": ["ゴシャハギ", "オロミドロ", "ヤツカダキ", "イソネミクニ亜種"],
-        "凶系": ["ラージャン", "ヤツカダキ亜種"],
+        "yomi": ["つめ"],
+        "tiers": ["傀異化した爪", "傀異化した尖爪", "傀異化した剛爪"],
+        "monsters": ["ゴシャハギ", "オロミドロ", "ヤツカダキ", "イソネミクニ亜種"],
     },
-    "角": {
-        "凶系": ["ディアブロス", "ジンオウガ", "セルレギオス"],
+    # 凶系
+    "凶骨": {
+        "yomi": ["ほね", "きょうこつ", "きょうほね"],
+        "tiers": ["傀異化した凶骨", "傀異化した凶堅骨", "傀異化した凶重骨"],
+        "monsters": ["ルナガロン", "オロミドロ亜種", "ティガレックス"],
     },
-    "翼膜": {
-        "凶系": ["リオレウス希少種", "リオレイア希少種"],
+    "凶鱗": {
+        "yomi": ["うろこ", "きょううろこ", "きょうりん"],
+        "tiers": ["傀異化した凶鱗", "傀異化した凶上鱗", "傀異化した凶厚鱗"],
+        "monsters": ["リオレウス", "ライゼクス", "タマミツネ"],
     },
+    "凶角": {
+        "yomi": ["つの", "きょうつの", "きょうかく"],
+        "tiers": ["傀異化した凶角", "傀異化した凶尖角", "傀異化した凶剛角"],
+        "monsters": ["ディアブロス", "ジンオウガ", "セルレギオス"],
+    },
+    "凶殻": {
+        "yomi": ["から", "こうかく", "きょうから", "きょうかく"],
+        "tiers": ["傀異化した凶殻", "傀異化した凶堅殻", "傀異化した凶重殻"],
+        "monsters": ["ゴア・マガラ", "エスピナス", "バゼルギウス"],
+    },
+    "凶爪": {
+        "yomi": ["つめ", "きょうづめ", "きょうそう"],
+        "tiers": ["傀異化した凶爪", "傀異化した凶尖爪", "傀異化した凶剛爪"],
+        "monsters": ["ラージャン", "ヤツカダキ亜種"],
+    },
+    "凶翼膜": {
+        "yomi": ["よくまく", "つばさ", "きょうよくまく"],
+        "tiers": ["傀異化した凶翼膜", "傀異化した凶翼", "傀異化した凶剛翼"],
+        "monsters": ["リオレウス希少種", "リオレイア希少種"],
+    },
+    "凶血": {
+        "yomi": ["ち", "きょうけつ", "きょうち"],
+        "tiers": ["傀異化した凶血", "傀異化した凶浄血", "傀異化した凶濃血"],
+        "monsters": ["エスピナス亜種", "紅蓮滾るバゼルギウス"],
+    },
+    "凶牙": {
+        "yomi": ["きば", "きょうきば", "きょうが"],
+        "tiers": ["傀異化した凶牙", "傀異化した凶鋭牙", "傀異化した凶重牙"],
+        "monsters": ["激昂したラージャン", "怨嗟響めくマガイマガド"],
+    },
+    # 破傀系（傀異克服モンスター由来）
     "龍骨": {
-        "破傀": ["傀異克服オオナズチ", "傀異克服クシャルダオラ", "傀異克服テオ・テスカトル"],
+        "yomi": ["りゅうこつ", "りゅうほね"],
+        "tiers": ["傀異化した龍骨", "傀異化した堅龍骨", "傀異化した重龍骨"],
+        "monsters": ["傀異克服オオナズチ", "傀異克服クシャルダオラ", "傀異克服テオ・テスカトル"],
     },
     "龍血": {
-        "破傀": ["傀異克服バルファルク", "傀異克服シャガルマガラ"],
+        "yomi": ["りゅうけつ", "りゅうち"],
+        "tiers": ["傀異化した龍血", "傀異化した浄龍血", "傀異化した濃龍血"],
+        "monsters": ["傀異克服バルファルク", "傀異克服シャガルマガラ"],
     },
 }
