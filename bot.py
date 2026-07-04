@@ -8,6 +8,7 @@
 """
 
 import os
+import sys
 
 import discord
 from discord.ext import commands
@@ -219,4 +220,30 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
             await channel.send(f"{user.mention} DMを送れませんでした（DM設定をご確認ください）")
 
 
-bot.run(TOKEN)
+def main():
+    # トークン未設定のまま bot.run() に渡すと
+    # 「TypeError: expected token to be a str, received NoneType」という
+    # 分かりにくい例外で落ちる。起動前にチェックして、原因と対処を案内する。
+    if not TOKEN:
+        print(
+            "起動できません: DISCORD_TOKEN が設定されていません。\n"
+            "リポジトリ直下に .env ファイルを作り、次の1行を書いてください:\n"
+            "    DISCORD_TOKEN=あなたのボットトークン\n"
+            "詳しい手順は README.md の「セットアップ」を参照してください。",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    try:
+        bot.run(TOKEN)
+    except discord.LoginFailure:
+        print(
+            "起動できません: DISCORD_TOKEN が無効です。\n"
+            "Discord Developer Portal でトークンを再確認し、.env を修正してください。",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
