@@ -18,6 +18,27 @@ from data import MATERIALS, MONSTERS
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+
+def parse_allowed_channel_ids(raw: str | None) -> set[int]:
+    """カンマ区切りのチャンネルID文字列をパースする。未設定・空なら空集合(=全チャンネル許可)。"""
+    if not raw:
+        return set()
+    ids = set()
+    for part in raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if not part.isdigit():
+            raise SystemExit(
+                f"ALLOWED_CHANNEL_IDS の値が不正です: {part!r} (数字のチャンネルIDをカンマ区切りで指定してください)"
+            )
+        ids.add(int(part))
+    return ids
+
+
+# 反応するチャンネルのID集合。空なら全チャンネルで反応する。
+ALLOWED_CHANNEL_IDS = parse_allowed_channel_ids(os.getenv("ALLOWED_CHANNEL_IDS"))
+
 # 結果メッセージのID → モンスター名リスト の対応を保持する辞書。
 # 📩 リアクションが押されたとき、どのメッセージがどのモンスター群に対応するか引くために使う。
 # メモリ上で持つだけなので bot 再起動で消える（永続化は不要）。
@@ -148,6 +169,10 @@ async def on_ready():
 async def on_message(message: discord.Message):
     # bot 自身の発言には反応しない（無限ループ防止）
     if message.author == bot.user:
+        return
+
+    # チャンネル制限が設定されていれば、対象外のチャンネルには反応しない
+    if ALLOWED_CHANNEL_IDS and message.channel.id not in ALLOWED_CHANNEL_IDS:
         return
 
     query = message.content.strip()

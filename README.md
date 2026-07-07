@@ -34,14 +34,25 @@ python -m venv .venv
 # パッケージをインストール
 pip install -r requirements.txt
 
-# .env ファイルを作成してトークンを設定（メモ帳などで作ってもOK）
-echo DISCORD_TOKEN=ここにトークンを貼る > .env
+# .env.example をコピーして .env を作成し、トークンを設定（メモ帳などで編集してOK）
+copy .env.example .env
 
 # 起動
 python bot.py
 ```
 
 「ログイン完了: BotName#1234」と表示されれば成功です。
+
+### 4. 反応するチャンネルを制限する（任意）
+
+`.env` の `ALLOWED_CHANNEL_IDS` に、反応させたいチャンネルのIDをカンマ区切りで設定します。
+
+```
+ALLOWED_CHANNEL_IDS=123456789012345678,234567890123456789
+```
+
+- 空 or 未設定の場合は、すべてのチャンネルで反応します
+- チャンネルIDは、Discord の設定で「開発者モード」を ON にし、チャンネルを右クリック →「チャンネルIDをコピー」で取得できます
 
 ## 使い方
 
@@ -60,6 +71,7 @@ python bot.py
 |---|---|
 | `bot.py` | Discord bot 本体（検索・ボタン UI・リアクション・DM送信） |
 | `data.py` | 素材・モンスターのデータ定義 |
-| `.env` | Discord トークン（Git管理外） |
+| `.env` | Discord トークン・チャンネル設定（Git管理外） |
+| `.env.example` | `.env` のテンプレート |
 | `.gitignore` | `.env` 等を除外 |
 | `requirements.txt` | 依存パッケージ |
