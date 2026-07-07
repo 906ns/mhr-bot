@@ -18,6 +18,12 @@ from data import MATERIALS, MONSTERS
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+# 反応するチャンネルIDの集合（カンマ区切りで複数指定可）。
+# 未設定・空なら全チャンネルで反応する。
+ALLOWED_CHANNEL_IDS: set[int] = {
+    int(ch) for ch in os.getenv("DISCORD_CHANNEL_IDS", "").split(",") if ch.strip()
+}
+
 # 結果メッセージのID → モンスター名リスト の対応を保持する辞書。
 # 📩 リアクションが押されたとき、どのメッセージがどのモンスター群に対応するか引くために使う。
 # メモリ上で持つだけなので bot 再起動で消える（永続化は不要）。
@@ -148,6 +154,10 @@ async def on_ready():
 async def on_message(message: discord.Message):
     # bot 自身の発言には反応しない（無限ループ防止）
     if message.author == bot.user:
+        return
+
+    # チャンネル指定がある場合、対象外のチャンネルには反応しない
+    if ALLOWED_CHANNEL_IDS and message.channel.id not in ALLOWED_CHANNEL_IDS:
         return
 
     query = message.content.strip()
